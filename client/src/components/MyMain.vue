@@ -2,11 +2,13 @@
   <div class="container">
     <div>
       <input type="number" v-model="degree">
-      <input type="number" v-model="w">
-      <input type="number" v-model="h">
+      <input type="number" v-model="imageWidth">
+      <input type="number" v-model="imageHeight">
+      <input type="text" v-model="imageSource">
     </div>
     <div class="image-container">
-      <svg width="100%" :viewBox="viewBox">
+      <img :src="imageSource" @load="imageLoaded" class="img">
+      <svg width="100%" :viewBox="viewBox" class="svg">
         <path :d=path fill="#37C64E" />
         Sorry, your browser does not support inline SVG.
       </svg>
@@ -20,9 +22,10 @@ export default {
   name: 'my-main',
   data () {
     return {
-      degree: 10,
-      w: 400,
-      h: 300
+      degree: 0,
+      imageWidth: 0,
+      imageHeight: 0,
+      imageSource: 'https://upload.wikimedia.org/wikipedia/mediawiki/a/a9/Example.jpg'
     }
   },
   computed: {
@@ -41,10 +44,10 @@ export default {
       return ''
     },
     viewBox () {
-      if(!this.path || !this.w || !this.h)
+      if(!this.path || !this.imageWidth || !this.imageHeight)
         return '0 0 0 0'
-      var w = this.w
-      var h = this.h
+      var w = this.imageWidth
+      var h = this.imageHeight
       while(w > 100 || h > 100){
         w /= 2
         h /= 2
@@ -53,6 +56,13 @@ export default {
       var my = 100 - (h / 2)
       return '' + mx + ' ' + my + ' ' + w + ' ' + h
     }
+  },
+  methods: {
+    imageLoaded (event) {
+      var img = event.path[0]
+      this.imageWidth = img.width
+      this.imageHeight = img.height
+    }
   }
 }
 </script>
@@ -60,6 +70,16 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss" scoped>
 .image-container {
-  padding: 5px;
+  position: relative;
+}
+
+.img {
+  width: 100%;
+}
+
+.svg {
+  position: absolute;
+  top: 0px;
+  left: 0px;
 }
 </style>
