@@ -229,6 +229,12 @@ export default {
         this.waiting = false
       })
     }
+  },
+  beforeDestroy () {
+    if(this.playing){
+      clearInterval(this.timer)
+      this.audio.pause()
+    }
   }
 }
 </script>
