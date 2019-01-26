@@ -10,10 +10,28 @@
       </div>
 
       <div v-if="images" class="images-container">
-        <div class="image-container" v-for="(image, i) in images" @click="playImage(i)">
+        <div class="image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}" v-for="(image, i) in images" @click="playImage(i)">
           <img class="my-image" :src="image.url" />
         </div>
       </div>
+
+      <div class="has-text-centered" v-if="uploading">
+        <v-icon name="spinner" class="icon is-medium fa-spin"></v-icon>
+      </div>
+      <div v-else class="file upload-button">
+        <label class="file-label">
+          <input class="file-input" type="file" accept="image/*" @change="onFileChange">
+          <span class="file-cta">
+            <span class="file-icon">
+              <v-icon name="upload"/>
+            </span>
+            <span class="file-label">
+              Upload a file…
+            </span>
+          </span>
+        </label>
+      </div>
+
     </div>
   </div>
 </template>
@@ -26,6 +44,8 @@ export default {
     return {
       waiting: false,
       error: '',
+      windowWidth: 0,
+      uploading: false
     }
   },
   computed: {
@@ -41,11 +61,37 @@ export default {
         }
       })
     },
+    imageSize () {
+      return this.windowWidth > 670 ? 200 : this.windowWidth / 4
+    }
   },
   methods: {
     playImage (index) {
       this.$store.commit('images/shuffleImages', index)
       this.$router.push('/')
+    },
+    onFileChange(e) {
+      var files = e.target.files || e.dataTransfer.files
+      if (!files.length)
+        return
+      var file = files[0]
+
+      var formData = new FormData()
+      formData.append('file', file)
+
+      this.uploading = true
+      this.$http.post(xHTTPx + '/upload_image', formData).then(response => {
+        var resp = response.body
+        this.$store.commit('images/addImage', resp.filename)
+        this.uploading = false
+        this.error = ''
+      }, response => {
+        this.error = 'Failed to upload image!'
+        this.uploading = false
+      })
+    },
+    handleResize () {
+      this.windowWidth = window.innerWidth
     }
   },
   mounted () {
@@ -58,6 +104,12 @@ export default {
       this.error = 'Failed to get images!'
       this.waiting = false
     })
+
+    this.windowWidth = window.innerWidth
+    window.addEventListener('resize', this.handleResize)
+  },
+  beforeDestroy () {
+    window.removeEventListener('resize', this.handleResize)
   }
 }
 </script>
@@ -91,5 +143,9 @@ export default {
   position: absolute;
   top: 0px;
   bottom: 0px;
+}
+
+.upload-button {
+  margin: 10px;
 }
 </style>

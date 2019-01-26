@@ -12,6 +12,7 @@ import 'vue-awesome/icons/play'
 import 'vue-awesome/icons/pause'
 import 'vue-awesome/icons/step-backward'
 import 'vue-awesome/icons/step-forward'
+import 'vue-awesome/icons/upload'
 import Icon from 'vue-awesome/components/Icon'
 Vue.component('v-icon', Icon)
 

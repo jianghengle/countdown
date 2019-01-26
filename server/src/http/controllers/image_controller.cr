@@ -28,6 +28,17 @@ module MyServer
           error(ctx, e.message.to_s)
         end
       end
+
+      def upload_image(ctx)
+        begin
+          name = Image.upload_image(ctx)
+          {filename: name}.to_json
+        rescue ex : InsufficientParameters
+          error(ctx, "Not all required parameters were present")
+        rescue e : Exception
+          error(ctx, e.message.to_s)
+        end
+      end
     end
   end
 end

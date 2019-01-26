@@ -24,7 +24,11 @@ module MyServer
         HttpAPI::ImageController.download_image(env)
       end
 
-      Kemal.run
+      post "/upload_image" do |env|
+        HttpAPI::ImageController.upload_image(env)
+      end
+
+      Kemal.run 9002
     end
   end
 end
