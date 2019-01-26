@@ -15,23 +15,11 @@
         </div>
         <div class="navbar-menu" :class="{'is-active': menuActive}">
           <div class="navbar-start">
-            <a class="navbar-item">
-              Load
-            </a>
           </div>
           <div class="navbar-end">
-            <router-link class="navbar-item" :to="'/docs'">
+            <router-link class="navbar-item" :to="'/images'">
               Pictures
             </router-link>
-            <div class="navbar-item">
-              <div class="field is-grouped">
-                <p class="control">
-                  <a class="button">
-                    <v-icon name="sign-in-alt"/>&nbsp;Sign In
-                  </a>
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>

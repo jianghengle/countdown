@@ -7,7 +7,11 @@ import store from './store'
 import VueResource from 'vue-resource'
 Vue.use(VueResource)
 
-import 'vue-awesome/icons/sign-in-alt'
+import 'vue-awesome/icons/spinner'
+import 'vue-awesome/icons/play'
+import 'vue-awesome/icons/pause'
+import 'vue-awesome/icons/step-backward'
+import 'vue-awesome/icons/step-forward'
 import Icon from 'vue-awesome/components/Icon'
 Vue.component('v-icon', Icon)
 

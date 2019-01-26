@@ -7,10 +7,10 @@
 <script>
 
 export default {
-  name: 'docs',
+  name: 'images',
   data () {
     return {
-      msg: 'Docs'
+      msg: 'images'
     }
   },
 }
