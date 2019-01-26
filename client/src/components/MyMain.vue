@@ -60,7 +60,7 @@
         </div>
 
       </div>
-      <div class="image-container">
+      <div class="image-container" @click="toggle">
         <img v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img">
         <svg width="100%" :viewBox="viewBox" class="svg">
           <path :d=path fill="#37C64E" />
@@ -87,7 +87,8 @@ export default {
       minutes: 2,
       seconds: 0,
       currentSecond: 0,
-      timer: null
+      timer: null,
+      audio: null
     }
   },
   computed: {
@@ -101,7 +102,7 @@ export default {
       return xHTTPx + '/download_image/' + encodeURIComponent(image)
     },
     totalSeconds () {
-      return this.minutes * 60 + this.seconds
+      return this.minutes * 60 + this.seconds + 0.1
     },
     degree () {
       var step = 360 / this.totalSeconds
@@ -159,17 +160,30 @@ export default {
       }
       var vm = this
       vm.playing = true
-      vm.timer = setInterval(vm.count, 1000)
+      vm.audio.play()
+      vm.timer = setInterval(vm.count, 100)
     },
     pause () {
       clearInterval(this.timer)
       this.playing = false
+      this.audio.pause()
+    },
+    toggle () {
+      if(this.playing){
+        this.pause()
+      }else{
+        this.play()
+      }
+    },
+    clear () {
+      this.currentSecond = this.totalSeconds
     },
     count () {
-      this.currentSecond += 1
+      this.currentSecond += 0.1
       if(this.currentSecond >= this.totalSeconds) {
         clearInterval(this.timer)
         this.playing = false
+        this.audio.pause()
       }
     },
     back () {
@@ -186,6 +200,7 @@ export default {
       if(this.playing){
         clearInterval(this.timer)
         this.playing = false
+        this.audio.pause()
       }
       this.currentSecond = 0
       if(this.index == this.images.length - 1){
@@ -196,6 +211,12 @@ export default {
     }
   },
   mounted () {
+    this.audio = new Audio('static/ticking.mp3')
+    this.audio.addEventListener('ended', function() {
+      this.currentTime = 0;
+      this.play();
+    }, false)
+
     if(this.images == null) {
       this.waiting = true
       this.$http.get(xHTTPx + '/get_images').then(response => {
