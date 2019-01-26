@@ -61,12 +61,19 @@
 
       </div>
       <div class="image-container" @click="toggle">
-        <img v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img">
-        <svg width="100%" :viewBox="viewBox" class="svg">
-          <path :d=path fill="#37C64E" />
-          Sorry, your browser does not support inline SVG.
+        <img id="myImage" v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img">
+        <svg width="100%" :viewBox="viewBox" class="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
+          <path :d=path fill="#37C64E"></path>
         </svg>
       </div>
+
+      <div class="has-text-centered" v-if="imageLoading">
+        <v-icon name="spinner" class="icon is-medium fa-spin"></v-icon>
+      </div>
+      <div>imageWidth: {{imageWidth}}</div>
+      <div>imageHeight: {{imageHeight}}</div>
+      <div>viewBox: {{viewBox}}</div>
+      <div>path: {{path}}</div>
     </div>
   </div>
 </template>
@@ -82,7 +89,7 @@ export default {
       index: 0,
       imageWidth: 0,
       imageHeight: 0,
-      imageLoading: false,
+      imageLoading: true,
       playing: false,
       minutes: 2,
       seconds: 0,
@@ -99,7 +106,7 @@ export default {
       if(!this.images)
         return ''
       var image = this.images[this.index]
-      return xHTTPx + '/download_image/' + encodeURIComponent(image)
+      return xHTTPx + '/images/' + encodeURIComponent(image)
     },
     totalSeconds () {
       return this.minutes * 60 + this.seconds + 0.1
@@ -147,7 +154,7 @@ export default {
   },
   methods: {
     imageLoaded (event) {
-      var img = event.path[0]
+      var img = document.getElementById('myImage')
       this.imageWidth = img.width
       this.imageHeight = img.height
       this.$nextTick(function(){
@@ -258,5 +265,6 @@ export default {
   position: absolute;
   top: 0px;
   left: 0px;
+  z-index: 10;
 }
 </style>

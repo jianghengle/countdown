@@ -20,9 +20,9 @@ module MyServer
         HttpAPI::ImageController.get_images(env)
       end
 
-      get "/download_image/:name" do |env|
-        HttpAPI::ImageController.download_image(env)
-      end
+      # get "/download_image/:name" do |env|
+      #   HttpAPI::ImageController.download_image(env)
+      # end
 
       post "/upload_image" do |env|
         HttpAPI::ImageController.upload_image(env)

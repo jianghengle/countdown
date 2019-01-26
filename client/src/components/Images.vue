@@ -57,7 +57,7 @@ export default {
       return images.map(function(image){
         return {
           name: image,
-          url: xHTTPx + '/download_image/' + encodeURIComponent(image)
+          url: xHTTPx + '/images/' + encodeURIComponent(image)
         }
       })
     },
