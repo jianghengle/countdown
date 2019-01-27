@@ -70,10 +70,6 @@
       <div class="has-text-centered" v-if="imageLoading">
         <v-icon name="spinner" class="icon is-medium fa-spin"></v-icon>
       </div>
-      <div>imageWidth: {{imageWidth}}</div>
-      <div>imageHeight: {{imageHeight}}</div>
-      <div>viewBox: {{viewBox}}</div>
-      <div>path: {{path}}</div>
     </div>
   </div>
 </template>
@@ -155,10 +151,10 @@ export default {
   methods: {
     imageLoaded (event) {
       var img = document.getElementById('myImage')
-      this.imageWidth = img.width
-      this.imageHeight = img.height
+      this.imageLoading = false
       this.$nextTick(function(){
-        this.imageLoading = false
+        this.imageWidth = img.clientWidth
+        this.imageHeight = img.clientHeight
       })
     },
     play () {
