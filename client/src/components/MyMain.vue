@@ -87,11 +87,12 @@ export default {
       imageHeight: 0,
       imageLoading: true,
       playing: false,
-      minutes: 2,
+      minutes: 1,
       seconds: 0,
       currentSecond: 0,
       timer: null,
-      audio: null
+      ticking: null,
+      tada: null
     }
   },
   computed: {
@@ -163,13 +164,13 @@ export default {
       }
       var vm = this
       vm.playing = true
-      vm.audio.play()
+      vm.ticking.play()
       vm.timer = setInterval(vm.count, 100)
     },
     pause () {
       clearInterval(this.timer)
       this.playing = false
-      this.audio.pause()
+      this.ticking.pause()
     },
     toggle () {
       if(this.playing){
@@ -186,7 +187,8 @@ export default {
       if(this.currentSecond >= this.totalSeconds) {
         clearInterval(this.timer)
         this.playing = false
-        this.audio.pause()
+        this.ticking.pause()
+        this.tada.play()
       }
     },
     back () {
@@ -203,7 +205,7 @@ export default {
       if(this.playing){
         clearInterval(this.timer)
         this.playing = false
-        this.audio.pause()
+        this.ticking.pause()
       }
       this.currentSecond = 0
       if(this.index == this.images.length - 1){
@@ -214,8 +216,9 @@ export default {
     }
   },
   mounted () {
-    this.audio = new Audio('static/ticking.mp3')
-    this.audio.addEventListener('ended', function() {
+    this.tada = new Audio('static/tada.mp3')
+    this.ticking = new Audio('static/ticking.mp3')
+    this.ticking.addEventListener('ended', function() {
       this.currentTime = 0;
       this.play();
     }, false)
@@ -236,7 +239,7 @@ export default {
   beforeDestroy () {
     if(this.playing){
       clearInterval(this.timer)
-      this.audio.pause()
+      this.ticking.pause()
     }
   }
 }

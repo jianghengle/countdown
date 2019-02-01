@@ -13,12 +13,13 @@
         <div class="image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}" v-for="(image, i) in images" @click="playImage(i)">
           <img class="my-image" :src="image.url" />
         </div>
+        <div class="image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}" v-if="uploading">
+          <div class="percentage" :style="{'margin-top': imageSize*0.4+'px'}">{{percentage}}%</div>
+          <progress class="progress" :value="percentage" max="100">{{percentage}}%</progress>
+        </div>
       </div>
 
-      <div class="has-text-centered" v-if="uploading">
-        <v-icon name="spinner" class="icon is-medium fa-spin"></v-icon>
-      </div>
-      <div v-else class="file upload-button">
+      <div v-if="!uploading" class="file upload-button">
         <label class="file-label">
           <input class="file-input" type="file" accept="image/*" @change="onFileChange">
           <span class="file-cta">
@@ -45,7 +46,8 @@ export default {
       waiting: false,
       error: '',
       windowWidth: 0,
-      uploading: false
+      uploading: false,
+      percentage: 0
     }
   },
   computed: {
@@ -80,7 +82,15 @@ export default {
       formData.append('file', file)
 
       this.uploading = true
-      this.$http.post(xHTTPx + '/upload_image', formData).then(response => {
+      var vm = this
+      this.$http.post(xHTTPx + '/upload_image', formData, {
+        before: request => {
+          vm.percentage = 0
+        },
+        progress: e => {
+          vm.percentage = Math.round((e.loaded / e.total) * 100)
+        }
+      }).then(response => {
         var resp = response.body
         this.$store.commit('images/addImage', resp.filename)
         this.uploading = false
@@ -143,6 +153,10 @@ export default {
   position: absolute;
   top: 0px;
   bottom: 0px;
+}
+
+.percentage {
+  text-align: center;
 }
 
 .upload-button {
