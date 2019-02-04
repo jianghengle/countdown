@@ -62,7 +62,7 @@
       </div>
       <div class="image-container" @click="toggle">
         <img id="myImage" v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img">
-        <svg width="100%" :viewBox="viewBox" class="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
+        <svg width="100%" height="100%" :viewBox="viewBox" class="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
           <path :d=path fill="#37C64E"></path>
         </svg>
       </div>
@@ -113,7 +113,7 @@ export default {
       return this.currentSecond * step
     },
     path () {
-      if(this.degree !== null && this.degree >= 0 && this.degree < 360){
+      if(this.degree !== null && this.degree >= 0 && this.degree < 360 && this.imageWidth && this.imageHeight){
         var d = this.degree
         if(d == 0){
           d = 0.001
@@ -122,7 +122,7 @@ export default {
         var x = 100 * Math.sin(r)
         var y = 100 - 100 * Math.cos(r)
         var a = d > 180 ? '0' : '1'
-        return 'M100,100 v-100, a100 100 0 ' + a + ' 0 ' + x + ' ' + y + ' Z' 
+        return 'M100,100 v-100 a100 100 0 ' + a + ' 0 ' + x + ' ' + y + ' Z'
       }
       return ''
     },
