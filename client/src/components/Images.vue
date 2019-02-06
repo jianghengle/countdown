@@ -3,19 +3,57 @@
     <div class="has-text-centered" v-if="waiting">
       <v-icon name="spinner" class="icon is-medium fa-spin"></v-icon>
     </div>
-    <div v-else>
-      <div v-if="error" class="notification is-danger">
-        <button class="delete" @click="error=''"></button>
-        {{error}}
-      </div>
+    
+    <div v-if="error" class="notification is-danger">
+      <button class="delete" @click="error=''"></button>
+      {{error}}
+    </div>
 
-      <div v-if="images" class="images-container">
-        <div class="image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}" v-for="(image, i) in images" @click="playImage(i)">
-          <img class="my-image" :src="image.url" />
+    <div v-if="images">
+      <div class="columns is-multiline">
+        <div class="column is-half level is-mobile picture-block" v-for="(image, i) in images">
+          <div class="level-item image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}" @click="playImage(i)">
+            <img class="my-image" :src="image.imageUrl" />
+          </div>
+          <div class="level-item image-options" :style="{'height': imageSize+'px'}">
+            <div class="field">
+              <div class="control">
+                <input class="input" type="text" placeholder="Name" v-model="image.imageName" @blur="imageChanged(i)">
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <div class="select">
+                  <select v-model="image.audioName" @change="imageChanged(i)">
+                    <option v-for="audio in audios">{{audio}}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}" v-if="uploading">
-          <div class="percentage" :style="{'margin-top': imageSize*0.4+'px'}">{{percentage}}%</div>
-          <progress class="progress" :value="percentage" max="100">{{percentage}}%</progress>
+
+        <div v-if="uploading" class="column is-half level is-mobile picture-block">
+          <div class="level-item image-container" :style="{'width': imageSize+'px', 'height': imageSize+'px'}">
+            <div class="percentage" :style="{'margin-top': imageSize*0.4+'px'}">{{percentage}}%</div>
+            <progress class="progress" :value="percentage" max="100">{{percentage}}%</progress>
+          </div>
+          <div class="level-item image-options" :style="{'height': imageSize+'px'}">
+            <div class="field">
+              <div class="control">
+                <input class="input" type="text" placeholder="Name">
+              </div>
+            </div>
+            <div class="field">
+              <div class="control">
+                <div class="select">
+                  <select>
+                    <option>Tada</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -32,7 +70,6 @@
           </span>
         </label>
       </div>
-
     </div>
   </div>
 </template>
@@ -47,30 +84,21 @@ export default {
       error: '',
       windowWidth: 0,
       uploading: false,
-      percentage: 0
+      percentage: 0,
+      images: null,
+      oldImages: null,
+      audios: []
     }
   },
   computed: {
-    images () {
-      var images = this.$store.state.images.images
-      if(!images){
-        return null
-      }
-      return images.map(function(image){
-        return {
-          name: image,
-          url: xHTTPx + '/images/' + encodeURIComponent(image)
-        }
-      })
-    },
     imageSize () {
       return this.windowWidth > 670 ? 200 : this.windowWidth / 4
     }
   },
   methods: {
     playImage (index) {
-      this.$store.commit('images/shuffleImages', index)
-      this.$router.push('/')
+      var image = this.images[index]
+      this.$router.push('/start/' + encodeURIComponent(btoa(image.imageName)))
     },
     onFileChange(e) {
       var files = e.target.files || e.dataTransfer.files
@@ -91,8 +119,13 @@ export default {
           vm.percentage = Math.round((e.loaded / e.total) * 100)
         }
       }).then(response => {
-        var resp = response.body
-        this.$store.commit('images/addImage', resp.filename)
+        var resp = response.body 
+        this.images.push({
+          imageName: resp.imageName,
+          audioName: resp.audioName,
+          imageUrl: xHTTPx + '/images/' + encodeURIComponent(resp.imageFile)
+        })
+        this.oldImages.push(resp)
         this.uploading = false
         this.error = ''
       }, response => {
@@ -102,17 +135,58 @@ export default {
     },
     handleResize () {
       this.windowWidth = window.innerWidth
+    },
+    imageChanged (i) {
+      var image = this.images[i]
+      var oldImage = this.oldImages[i]
+      if(image.imageName.trim() == oldImage.imageName && image.audioName == oldImage.audioName)
+        return
+      var message = {
+        newImageName: image.imageName.trim(),
+        oldImageName: oldImage.imageName,
+        newAudioName: image.audioName,
+      }
+      this.$http.post(xHTTPx + '/update_image', message).then(response => {
+        var resp = response.body
+        var newImage = {
+          imageName: resp.imageName,
+          audioName: resp.audioName,
+          imageUrl: xHTTPx + '/images/' + encodeURIComponent(resp.imageFile)
+        }
+        this.images.splice(i, 1, newImage)
+        this.oldImages.splice(i, 1, resp)
+      }, response => {
+        this.error = 'Failed to update image!'
+      })
     }
   },
   mounted () {
     this.waiting = true
     this.$http.get(xHTTPx + '/get_images').then(response => {
-      var resp = response.body
-      this.$store.commit('images/setImages', resp)
+      var resp = response.body.sort(function(a, b){
+        return a.imageName.localeCompare(b.imageName)
+      })
+      this.images = resp.map(function(i){
+        return {
+          imageName: i.imageName,
+          audioName: i.audioName,
+          imageUrl: xHTTPx + '/images/' + encodeURIComponent(i.imageFile)
+        }
+      })
+      this.oldImages = resp
       this.waiting = false
     }, response => {
       this.error = 'Failed to get images!'
       this.waiting = false
+    })
+
+    this.$http.get(xHTTPx + '/get_audios').then(response => {
+      var resp = response.body
+      this.audios = resp.map(function(i){
+        return i.audioName
+      })
+    }, response => {
+      this.error = 'Failed to get audios!'
     })
 
     this.windowWidth = window.innerWidth
@@ -128,23 +202,31 @@ export default {
 <style lang="scss" scoped>
 .main-container {
   margin-top: 15px;
+  padding-top: 10px;
 }
 
 .images-container {
   width: 100%;
 }
 
+.picture-block {
+  margin-bottom: 0px;
+}
+
 .image-container {
-  height: 200px;
-  width: 200px;
   display: inline-block;
-  margin: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
   overflow: hidden;
   position: relative;
   border: 1px solid rgba(10, 10, 10, 0.1);
   border-radius: 5px;
   box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1);
   cursor: pointer;
+}
+
+.image-options {
+  display: inline-block;
 }
 
 .my-image {

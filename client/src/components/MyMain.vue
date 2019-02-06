@@ -60,11 +60,17 @@
         </div>
 
       </div>
-      <div class="image-container" @click="toggle">
+      <div class="image-container" @click="toggle" :style="{'height': imageHeight+'px'}">
         <img id="myImage" v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img">
         <svg width="100%" height="100%" :viewBox="viewBox" class="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
-          <path :d=path fill="#37C64E"></path>
+          <path :d=path :fill="fillColor"></path>
         </svg>
+      </div>
+
+      <div class="has-text-centered is-size-5 has-text-weight-bold image-text">
+        <transition name="bounce">
+          <div v-if="currentSecond >= totalSeconds">{{imageText}}</div>
+        </transition>
       </div>
 
       <div class="has-text-centered" v-if="imageLoading">
@@ -75,6 +81,10 @@
 </template>
 
 <script>
+
+var green = [35, 209, 90]
+var red = [255, 0, 0]
+var step = [(red[0] - green[0]) / 360, (red[1] - green[1]) / 360, (red[2] - green[2]) / 360]
 
 export default {
   name: 'my-main',
@@ -92,18 +102,27 @@ export default {
       currentSecond: 0,
       timer: null,
       ticking: null,
-      tada: null
+      images: null,
     }
   },
   computed: {
-    images () {
-      return this.$store.state.images.images
-    },
     imageSource () {
       if(!this.images)
         return ''
       var image = this.images[this.index]
-      return xHTTPx + '/images/' + encodeURIComponent(image)
+      return xHTTPx + '/images/' + encodeURIComponent(image.imageFile)
+    },
+    endingAudio () {
+      if(!this.images)
+        return null
+      var image = this.images[this.index]
+      var src = xHTTPx + '/audios/' + encodeURIComponent(image.audioFile)
+      return new Audio(src)
+    },
+    imageText () {
+      if(!this.images)
+        return null
+      return this.images[this.index].imageName
     },
     totalSeconds () {
       return this.minutes * 60 + this.seconds + 0.1
@@ -111,6 +130,12 @@ export default {
     degree () {
       var step = 360 / this.totalSeconds
       return this.currentSecond * step
+    },
+    fillColor () {
+      var r = Math.floor(this.degree * step[0] + green[0])
+      var g = Math.floor(this.degree * step[1] + green[1])
+      var b = Math.floor(this.degree * step[2] + green[2])
+      return 'rgb(' + r + ',' + g + ','+ b +')'
     },
     path () {
       if(this.degree !== null && this.degree >= 0 && this.degree < 360 && this.imageWidth && this.imageHeight){
@@ -138,7 +163,13 @@ export default {
       var mx = 100 - (w / 2)
       var my = 100 - (h / 2)
       return '' + mx + ' ' + my + ' ' + w + ' ' + h
-    }
+    },
+    routeImageName () {
+      if(this.$route.params.imageName){
+        return atob(this.$route.params.imageName)
+      }
+      return ''
+    },
   },
   watch: {
     imageSource: function (val) {
@@ -161,6 +192,9 @@ export default {
     play () {
       if(this.currentSecond >= this.totalSeconds){
         this.currentSecond = 0
+        if(this.endingAudio){
+          this.endingAudio.pause()
+        }
       }
       var vm = this
       vm.playing = true
@@ -188,58 +222,93 @@ export default {
         clearInterval(this.timer)
         this.playing = false
         this.ticking.pause()
-        this.tada.play()
+        this.endingAudio.play()
       }
     },
     back () {
-      this.currentSecond = 0
-      if(!this.playing){
+      if(this.endingAudio){
+        this.endingAudio.pause()
+      }
+      if(this.currentSecond == 0){
         if(this.index == 0){
           this.index = this.images.length - 1
         }else{
           this.index -= 1
         }
+      }else{
+        this.currentSecond = 0
       }
     },
     next () {
-      if(this.playing){
+      if(this.endingAudio){
+        this.endingAudio.pause()
+      }
+      if(this.currentSecond >= this.totalSeconds){
+        this.currentSecond = 0
+        if(this.index == this.images.length - 1){
+          this.index = 0
+        }else{
+          this.index += 1
+        }
+      }else{
+        this.currentSecond = this.totalSeconds
         clearInterval(this.timer)
         this.playing = false
         this.ticking.pause()
+        this.endingAudio.play()
       }
-      this.currentSecond = 0
-      if(this.index == this.images.length - 1){
-        this.index = 0
-      }else{
-        this.index += 1
+    },
+    shuffle (a) {
+      var j, x, i;
+      for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
       }
     }
   },
   mounted () {
-    this.tada = new Audio('static/tada.mp3')
     this.ticking = new Audio('static/ticking.mp3')
     this.ticking.addEventListener('ended', function() {
       this.currentTime = 0;
       this.play();
     }, false)
 
-    if(this.images == null) {
-      this.waiting = true
-      this.$http.get(xHTTPx + '/get_images').then(response => {
-        var resp = response.body
-        this.$store.commit('images/setImages', resp)
-        this.$store.commit('images/shuffleImages')
-        this.waiting = false
-      }, response => {
-        this.error = 'Failed to get images!'
-        this.waiting = false
-      })
-    }
+    
+    this.waiting = true
+    this.$http.get(xHTTPx + '/get_images_with_audios').then(response => {
+      var images = response.body
+      this.shuffle(images)
+      if(this.routeImageName){
+        var index = -1
+        for(var i=0;i<images.length;i++){
+          if(images[i].imageName == this.routeImageName){
+            index = i
+            break
+          }
+        }
+        if(index != -1){
+          var firstImage = images[index]
+          images.splice(index, 1)
+          images.unshift(firstImage)
+        }
+      }
+      this.images = images
+      this.waiting = false
+    }, response => {
+      this.error = 'Failed to get images!'
+      this.waiting = false
+    })
+    
   },
   beforeDestroy () {
     if(this.playing){
       clearInterval(this.timer)
       this.ticking.pause()
+    }
+    if(this.endingAudio){
+      this.endingAudio.pause()
     }
   }
 }
@@ -254,6 +323,11 @@ export default {
 .image-container {
   margin-top: 10px;
   position: relative;
+  border: 1px solid rgba(10, 10, 10, 0.1);
+  border-radius: 5px;
+  box-shadow: 0 2px 3px rgba(10, 10, 10, 0.1);
+  cursor: pointer;
+  overflow: hidden;
 }
 
 .img {
@@ -265,5 +339,25 @@ export default {
   top: 0px;
   left: 0px;
   z-index: 10;
+}
+
+.image-text {
+  min-height: 100px;
+}
+
+.bounce-enter-active {
+  animation: bounce-in 2s;
+}
+
+@keyframes bounce-in {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 </style>

@@ -2,23 +2,16 @@
   <div>
     <nav class="navbar has-shadow">
       <div class="container">
-        <div class="navbar-brand">
-          <router-link class="navbar-item is-size-4 has-text-weight-bold has-text-black" :to="'/'">
+        <div class="navbar-brand container level is-mobile">
+          <router-link class="navbar-item is-size-4 has-text-weight-bold has-text-black level-left" :to="'/'">
             Count Down
           </router-link>
-          <div class="navbar-burger burger app-burger" :class="{'is-active': menuActive}"
-            @click="menuActive = !menuActive">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-        <div class="navbar-menu" :class="{'is-active': menuActive}">
-          <div class="navbar-start">
-          </div>
-          <div class="navbar-end">
-            <router-link class="navbar-item" :to="'/images'">
-              Pictures
+          <div class="level-right">
+            <router-link class="navbar-item" :class="{'active-route': routePath=='/images'}" :to="'/images'">
+              <v-icon name="image" scale="1.2" />
+            </router-link>
+            <router-link class="navbar-item" :class="{'active-route': routePath=='/audios'}" :to="'/audios'">
+              <v-icon name="music" scale="1.2" />
             </router-link>
           </div>
         </div>
@@ -38,12 +31,19 @@ export default {
   computed: {
     token () {
       return this.$store.state.user.token
-    }
+    },
+    routePath () {
+      return this.$route.path
+    },
   }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style lang="scss" scoped>
+
+.active-route {
+  color: #4571e1;
+}
 
 </style>
