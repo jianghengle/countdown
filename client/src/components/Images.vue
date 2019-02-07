@@ -98,7 +98,7 @@ export default {
   methods: {
     playImage (index) {
       var image = this.images[index]
-      this.$router.push('/start/' + encodeURIComponent(btoa(image.imageName)))
+      this.$router.push('/start/' + btoa(encodeURIComponent(image.imageName)))
     },
     onFileChange(e) {
       var files = e.target.files || e.dataTransfer.files

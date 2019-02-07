@@ -98,7 +98,7 @@ export default {
       imageLoading: true,
       playing: false,
       minutes: 1,
-      seconds: 0,
+      seconds: 10,
       currentSecond: 0,
       timer: null,
       ticking: null,
@@ -166,7 +166,7 @@ export default {
     },
     routeImageName () {
       if(this.$route.params.imageName){
-        return atob(this.$route.params.imageName)
+        return decodeURIComponent(atob(this.$route.params.imageName))
       }
       return ''
     },
