@@ -60,8 +60,8 @@
         </div>
 
       </div>
-      <div class="image-container" @click="toggle" :style="{'height': imageHeight+'px'}">
-        <img id="myImage" v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img">
+      <div class="image-container" @click="toggle" :style="{'height': imageHeight+'px', 'width': imageWidth ? imageWidth+'px' : 'auto' }">
+        <img id="myImage" v-show="!imageLoading" :src="imageSource" @load="imageLoaded" class="img" :style="imageStyle">
         <svg width="100%" height="100%" :viewBox="viewBox" class="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
           <path :d=path :fill="fillColor"></path>
         </svg>
@@ -103,6 +103,7 @@ export default {
       timer: null,
       ticking: null,
       images: null,
+      imageStyle: {},
     }
   },
   computed: {
@@ -177,6 +178,7 @@ export default {
         this.imageLoading = true
         this.imageWidth = 0
         this.imageHeight = 0
+        this.imageStyle = {}
       }
     }
   },
@@ -185,8 +187,20 @@ export default {
       var img = document.getElementById('myImage')
       this.imageLoading = false
       this.$nextTick(function(){
-        this.imageWidth = img.clientWidth
-        this.imageHeight = img.clientHeight
+        var width = img.clientWidth
+        var height = img.clientHeight
+        var ratio = width / height
+        if(height > 800){
+          this.imageHeight = 800
+          this.imageWidth = 800 * ratio
+          this.imageStyle = {
+            height: this.imageHeight + 'px',
+            width: this.imageWidth + 'px'
+          }
+        }else{
+          this.imageHeight = height
+          this.imageWidth = width
+        }
       })
     },
     play () {
@@ -322,6 +336,8 @@ export default {
 
 .image-container {
   margin-top: 10px;
+  margin-left: auto;
+  margin-right:auto;
   position: relative;
   border: 1px solid rgba(10, 10, 10, 0.1);
   border-radius: 5px;
